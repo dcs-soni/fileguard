@@ -84,12 +84,11 @@ const fileFilter = (
     return;
   }
 
-  // Optionally check MIME type (commented out for flexibility)
-  // In production, may want to enable this
-  // if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-  //   cb(new ValidationError(`MIME type not allowed: ${file.mimetype}`));
-  //   return;
-  // }
+  // validate MIME type to prevent file type spoofing
+  if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+    cb(new ValidationError(`MIME type not allowed ${file.mimetype}`));
+    return;
+  }
 
   cb(null, true);
 };
