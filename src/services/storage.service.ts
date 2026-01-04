@@ -8,8 +8,6 @@ import { config } from '../config/index.js';
 import { StorageError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
-
-
 const UPLOAD_DIR = path.resolve(config.storage.uploadDir);
 
 
@@ -91,7 +89,17 @@ export async function saveFile(
 }
 
 export function getFilePath(storedFilename: string): string {
-  return path.join(UPLOAD_DIR, storedFilename);
+  const safeName = path.basename(storedFilename);
+
+  const filePath = path.join(UPLOAD_DIR, safeName);
+  const resolvedPath = path.resolve(filePath);
+  const resolvedUploadDir = path.resolve(UPLOAD_DIR);
+
+  if (!resolvedPath.startsWith(resolvedUploadDir + path.sep)) {
+    throw new StorageError(`Invalid file path detected: ${storedFilename}`);
+  }
+
+  return resolvedPath;
 }
 
 export async function fileExists(storedFilename: string): Promise<boolean> {
