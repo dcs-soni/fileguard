@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 
 import { ErrorCode, type ApiErrorResponse } from '../../types/index.js';
@@ -68,7 +67,7 @@ export const notFoundHandler = (
   res.status(404).json({
     success: false,
     error: {
-      code: ErrorCode.JOB_NOT_FOUND,
+      code: ErrorCode.ROUTE_NOT_FOUND,
       message: `Route not found: ${req.method} ${req.path}`,
     },
   });

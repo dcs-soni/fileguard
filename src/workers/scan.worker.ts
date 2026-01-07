@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { Worker, Job } from 'bullmq';
 
 import { config } from '../config/index.js';
@@ -8,7 +10,6 @@ import storageService from '../services/storage.service.js';
 import { JobStatus, ScanResultType } from '../types/index.js';
 import type { ScanJobPayload } from '../types/index.js';
 import logger from '../utils/logger.js';
-
 
 const workerLogger = logger.child({ component: 'scan-worker' });
 
@@ -21,7 +22,7 @@ async function processScanJob(job: Job<ScanJobPayload>): Promise<void> {
   try {
     await jobService.updateJobStatus(jobId, JobStatus.PROCESSING);
 
-    const filename = filePath.split(/[\\/]/).pop() ?? '';
+    const filename = path.basename(filePath);
     const fileExists = await storageService.fileExists(filename);
 
     if (!fileExists) {
@@ -84,23 +85,18 @@ async function processScanJob(job: Job<ScanJobPayload>): Promise<void> {
   }
 }
 
-const worker = new Worker<ScanJobPayload>(
-  SCAN_QUEUE_NAME,
-  processScanJob,
-  {
-    connection: redisConnection,
-    concurrency: config.worker.concurrency,
-    
-    // Job lock settings
-    lockDuration: config.worker.jobTimeoutMs,
-    lockRenewTime: config.worker.jobTimeoutMs / 2,
+const worker = new Worker<ScanJobPayload>(SCAN_QUEUE_NAME, processScanJob, {
+  connection: redisConnection,
+  concurrency: config.worker.concurrency,
 
-    limiter: {
-      max: 10, 
-      duration: 1000,
-    },
-  }
-);
+  lockDuration: config.worker.jobTimeoutMs,
+  lockRenewTime: config.worker.jobTimeoutMs / 2,
+
+  limiter: {
+    max: 10,
+    duration: 1000,
+  },
+});
 
 worker.on('ready', () => {
   workerLogger.info(
@@ -110,17 +106,11 @@ worker.on('ready', () => {
 });
 
 worker.on('active', (job) => {
-  workerLogger.debug(
-    { jobId: job.data.jobId, queueJobId: job.id },
-    'Job became active'
-  );
+  workerLogger.debug({ jobId: job.data.jobId, queueJobId: job.id }, 'Job became active');
 });
 
 worker.on('completed', (job) => {
-  workerLogger.debug(
-    { jobId: job.data.jobId, queueJobId: job.id },
-    'Job completed'
-  );
+  workerLogger.debug({ jobId: job.data.jobId, queueJobId: job.id }, 'Job completed');
 });
 
 worker.on('failed', (job, error) => {
@@ -177,7 +167,6 @@ process.on('unhandledRejection', (reason) => {
   workerLogger.fatal({ reason }, 'Unhandled rejection');
   void shutdown('unhandledRejection');
 });
-
 
 workerLogger.info(
   {

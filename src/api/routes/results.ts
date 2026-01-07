@@ -13,38 +13,40 @@ interface ResultsQuery {
 
 router.get(
   '/',
-  asyncHandler(async (
-    req: Request<object, InfectedFilesResponse | ApiErrorResponse, object, ResultsQuery>,
-    res: Response<InfectedFilesResponse | ApiErrorResponse>
-  ): Promise<void> => {
-    const page = Math.max(parseInt(req.query.page ?? '1', 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit ?? '20', 10), 1), 100);
+  asyncHandler(
+    async (
+      req: Request<object, InfectedFilesResponse | ApiErrorResponse, object, ResultsQuery>,
+      res: Response<InfectedFilesResponse | ApiErrorResponse>
+    ): Promise<void> => {
+      const page = Math.max(parseInt(req.query.page ?? '1', 10) || 1, 1);
+      const limit = Math.min(Math.max(parseInt(req.query.limit ?? '20', 10) || 20, 1), 100);
 
-    const { files, total } = await jobService.getInfectedFiles(page, limit);
+      const { files, total } = await jobService.getInfectedFiles(page, limit);
 
-    const totalPages = Math.ceil(total / limit);
+      const totalPages = Math.ceil(total / limit);
 
-    res.json({
-      success: true,
-      data: {
-        totalInfected: total,
-        files: files.map((file) => ({
-          jobId: file.jobId,
-          filename: file.filename,
-          fileSize: file.fileSize,
-          threatName: file.threatName,
-          threatCategory: file.threatCategory,
-          scannedAt: file.scannedAt.toISOString(),
-        })),
-      },
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-    });
-  })
+      res.json({
+        success: true,
+        data: {
+          totalInfected: total,
+          files: files.map((file) => ({
+            jobId: file.jobId,
+            filename: file.filename,
+            fileSize: file.fileSize,
+            threatName: file.threatName,
+            threatCategory: file.threatCategory,
+            scannedAt: file.scannedAt.toISOString(),
+          })),
+        },
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      });
+    }
+  )
 );
 
 router.get(
@@ -90,7 +92,7 @@ router.get(
         completedJobs: parseInt(stats.completed_jobs, 10),
         failedJobs: parseInt(stats.failed_jobs, 10),
         infectedFiles: parseInt(stats.infected_files, 10),
-        avgScanDurationMs: Math.round(parseFloat(stats.avg_scan_duration_ms)),
+        avgScanDurationMs: Math.round(parseFloat(stats.avg_scan_duration_ms) || 0),
       },
     });
   })
@@ -99,7 +101,10 @@ router.get(
 router.get(
   '/recent',
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const limit = Math.min(Math.max(parseInt(req.query.limit as string ?? '10', 10), 1), 50);
+    const limit = Math.min(
+      Math.max(parseInt((req.query.limit as string) ?? '10', 10) || 10, 1),
+      50
+    );
 
     const { query } = await import('../../db/client.js');
 

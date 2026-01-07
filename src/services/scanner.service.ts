@@ -1,4 +1,3 @@
-
 import NodeClam from 'clamscan';
 
 import { config } from '../config/index.js';
@@ -9,9 +8,8 @@ import logger from '../utils/logger.js';
 let clamScanner: NodeClam | null = null;
 let isInitialized = false;
 
-
 // Must be called before scanning files
- 
+
 export async function initScanner(): Promise<void> {
   if (isInitialized) {
     logger.debug('Scanner already initialized');
@@ -32,11 +30,11 @@ export async function initScanner(): Promise<void> {
 
       // ClamAV daemon settings
       clamdscan: {
-        socket: false, // Use TCP 
+        socket: false, // Use TCP
         host: config.clamav.host,
         port: config.clamav.port,
         timeout: config.clamav.timeout,
-        localFallback: false, 
+        localFallback: false,
         active: true,
       },
 
@@ -94,7 +92,7 @@ export async function scanFile(filePath: string): Promise<ClamScanResult> {
     logger.error({ error, filePath, scanDurationMs }, 'File scan failed');
 
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
-      isInitialized = false; 
+      isInitialized = false;
       throw new ScannerUnavailableError();
     }
 
@@ -194,6 +192,11 @@ export async function scanBuffer(buffer: Buffer): Promise<ClamScanResult> {
     const scanDurationMs = Date.now() - startTime;
 
     logger.error({ error, bufferSize: buffer.length, scanDurationMs }, 'Buffer scan failed');
+
+    if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
+      isInitialized = false;
+      throw new ScannerUnavailableError();
+    }
 
     throw new ScannerError('Failed to scan buffer', {
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -119,7 +119,6 @@ export interface ScanResultSummary {
   scanDurationMs: number;
 }
 
-
 export interface InfectedFilesResponse {
   success: true;
   data: {
@@ -133,7 +132,6 @@ export interface InfectedFilesResponse {
     totalPages: number;
   };
 }
-
 
 export interface InfectedFileInfo {
   jobId: string;
@@ -183,6 +181,7 @@ export enum ErrorCode {
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   JOB_NOT_FOUND = 'JOB_NOT_FOUND',
+  ROUTE_NOT_FOUND = 'ROUTE_NOT_FOUND',
 
   // Server errors (5xx)
   INTERNAL_ERROR = 'INTERNAL_ERROR',
