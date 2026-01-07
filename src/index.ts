@@ -26,54 +26,59 @@ app.use(
   })
 );
 
-
 app.use(express.json({ limit: '1mb' }));
 
 // URL-encoded body parsing
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use((req: Request, _res: Response, next) => {
-  logger.info({
-    method: req.method,
-    path: req.path,
-    query: req.query,
-    ip: req.ip,
-  }, 'Incoming request');
+  logger.info(
+    {
+      method: req.method,
+      path: req.path,
+      query: req.query,
+      ip: req.ip,
+    },
+    'Incoming request'
+  );
   next();
 });
 
-app.get('/health', asyncHandler(async (_req: Request, res: Response): Promise<void> => {
-  try {
-    const [dbHealthy, queueHealthy, scannerHealthy] = await Promise.all([
-      isDatabaseHealthy(),
-      isQueueHealthy(),
-      isScannerHealthy(),
-    ]);
+app.get(
+  '/health',
+  asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const [dbHealthy, queueHealthy, scannerHealthy] = await Promise.all([
+        isDatabaseHealthy(),
+        isQueueHealthy(),
+        isScannerHealthy(),
+      ]);
 
-    const scannerVersion = await getScannerVersion();
+      const scannerVersion = await getScannerVersion();
 
-    const isHealthy = dbHealthy && queueHealthy;
-    // Note: scanner might be slow to start, for now don't require it for basic health
+      const isHealthy = dbHealthy && queueHealthy;
+      // Note: scanner might be slow to start, for now don't require it for basic health
 
-    res.status(isHealthy ? 200 : 503).json({
-      status: isHealthy ? 'healthy' : 'degraded',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      services: {
-        database: dbHealthy ? 'up' : 'down',
-        queue: queueHealthy ? 'up' : 'down',
-        scanner: scannerHealthy ? 'up' : 'down',
-        scannerVersion,
-      },
-    });
-  } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.status(isHealthy ? 200 : 503).json({
+        status: isHealthy ? 'healthy' : 'degraded',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        services: {
+          database: dbHealthy ? 'up' : 'down',
+          queue: queueHealthy ? 'up' : 'down',
+          scanner: scannerHealthy ? 'up' : 'down',
+          scannerVersion,
+        },
+      });
+    } catch (error) {
+      res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  })
+);
 
 app.use('/scan', scanRouter);
 app.use('/status', statusRouter);
@@ -91,7 +96,7 @@ app.get('/', (_req: Request, res: Response) => {
       'GET /results/recent': 'Get recent scan activity',
       'GET /health': 'Health check endpoint',
     },
-    documentation: 'https://github.com/dcs-soni/file-virus-scanner',
+    documentation: 'https://github.com/dcs-soni/fileguard',
   });
 });
 
@@ -138,8 +143,12 @@ async function startServer(): Promise<void> {
     };
 
     // Register shutdown handlers
-    process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
-    process.on('SIGINT', () => { void shutdown('SIGINT'); });
+    process.on('SIGTERM', () => {
+      void shutdown('SIGTERM');
+    });
+    process.on('SIGINT', () => {
+      void shutdown('SIGINT');
+    });
 
     // Handle uncaught errors
     process.on('uncaughtException', (error) => {
@@ -151,7 +160,6 @@ async function startServer(): Promise<void> {
       logger.fatal({ reason }, 'Unhandled rejection');
       void shutdown('unhandledRejection');
     });
-
   } catch (error) {
     logger.fatal({ error }, 'Failed to start server');
     process.exit(1);

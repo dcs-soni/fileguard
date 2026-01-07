@@ -1,5 +1,5 @@
 {
-  "name": "file-virus-scanner",
+  "name": "fileguard",
   "version": "1.0.0",
   "type": "module",
   "description": "Enterprise-grade file virus scanning service with async queue processing",
