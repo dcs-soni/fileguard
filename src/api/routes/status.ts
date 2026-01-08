@@ -18,7 +18,10 @@ interface StatusParams {
   jobId: string;
 }
 
-async function getJobProgress(jobId: string, status: JobStatus): Promise<JobProgress> {
+async function getJobProgress(
+  jobId: string,
+  status: JobStatus
+): Promise<JobProgress> {
   switch (status) {
     case JobStatus.PENDING: {
       const position = await queueService.getJobPosition(jobId);
@@ -68,63 +71,66 @@ async function getJobProgress(jobId: string, status: JobStatus): Promise<JobProg
   }
 }
 
-
 function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
 }
 
 router.get(
   '/:jobId',
-  asyncHandler(async (
-    req: Request<StatusParams, JobStatusResponse | ApiErrorResponse>,
-    res: Response<JobStatusResponse | ApiErrorResponse>
-  ): Promise<void> => {
-    const { jobId } = req.params;
+  asyncHandler(
+    async (
+      req: Request<StatusParams, JobStatusResponse | ApiErrorResponse>,
+      res: Response<JobStatusResponse | ApiErrorResponse>
+    ): Promise<void> => {
+      const { jobId } = req.params;
 
-    if (!isValidUUID(jobId)) {
-      throw new ValidationError('Invalid job ID format. Must be a valid UUID.');
-    }
-
-    const job = await jobService.getJobByIdOrThrow(jobId);
-
-    const progress = await getJobProgress(jobId, job.status);
-
-    // Get scan result if job is completed
-    let result: ScanResultSummary | null = null;
-    if (job.status === JobStatus.COMPLETED) {
-      const scanResult = await jobService.getScanResultByJobId(jobId);
-      if (scanResult) {
-        result = {
-          isInfected: scanResult.isInfected,
-          threatName: scanResult.threatName,
-          scanDurationMs: scanResult.scanDurationMs,
-        };
+      if (!isValidUUID(jobId)) {
+        throw new ValidationError(
+          'Invalid job ID format. Must be a valid UUID.'
+        );
       }
-    }
 
-    res.json({
-      success: true,
-      data: {
-        jobId: job.id,
-        filename: job.originalFilename,
-        status: job.status,
-        progress,
-        result,
-        timestamps: {
-          createdAt: job.createdAt.toISOString(),
-          startedAt: job.startedAt?.toISOString() ?? null,
-          completedAt: job.completedAt?.toISOString() ?? null,
+      const job = await jobService.getJobByIdOrThrow(jobId);
+
+      const progress = await getJobProgress(jobId, job.status);
+
+      // Get scan result if job is completed
+      let result: ScanResultSummary | null = null;
+      if (job.status === JobStatus.COMPLETED) {
+        const scanResult = await jobService.getScanResultByJobId(jobId);
+        if (scanResult) {
+          result = {
+            isInfected: scanResult.isInfected,
+            threatName: scanResult.threatName,
+            scanDurationMs: scanResult.scanDurationMs,
+          };
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          jobId: job.id,
+          filename: job.originalFilename,
+          status: job.status,
+          progress,
+          result,
+          timestamps: {
+            createdAt: job.createdAt.toISOString(),
+            startedAt: job.startedAt?.toISOString() ?? null,
+            completedAt: job.completedAt?.toISOString() ?? null,
+          },
         },
-      },
-    });
-  })
+      });
+    }
+  )
 );
-
 
 // Get queue statistics (no specific job).
 // Returns overall system status and queue metrics.
- 
+
 router.get(
   '/',
   asyncHandler(async (_req: Request, res: Response): Promise<void> => {

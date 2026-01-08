@@ -1,4 +1,3 @@
-
 import { pino, Logger } from 'pino';
 
 import { config, isDev } from '../config/index.js';

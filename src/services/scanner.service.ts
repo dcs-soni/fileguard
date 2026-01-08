@@ -103,7 +103,9 @@ export async function scanFile(filePath: string): Promise<ClamScanResult> {
   }
 }
 
-export async function scanDirectory(directoryPath: string): Promise<ClamScanResult> {
+export async function scanDirectory(
+  directoryPath: string
+): Promise<ClamScanResult> {
   if (!clamScanner || !isInitialized) {
     await initScanner();
   }
@@ -148,7 +150,10 @@ export async function scanDirectory(directoryPath: string): Promise<ClamScanResu
   } catch (error) {
     const scanDurationMs = Date.now() - startTime;
 
-    logger.error({ error, directoryPath, scanDurationMs }, 'Directory scan failed');
+    logger.error(
+      { error, directoryPath, scanDurationMs },
+      'Directory scan failed'
+    );
 
     throw new ScannerError('Failed to scan directory', {
       directoryPath,
@@ -191,7 +196,10 @@ export async function scanBuffer(buffer: Buffer): Promise<ClamScanResult> {
   } catch (error) {
     const scanDurationMs = Date.now() - startTime;
 
-    logger.error({ error, bufferSize: buffer.length, scanDurationMs }, 'Buffer scan failed');
+    logger.error(
+      { error, bufferSize: buffer.length, scanDurationMs },
+      'Buffer scan failed'
+    );
 
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
       isInitialized = false;

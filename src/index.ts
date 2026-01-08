@@ -2,14 +2,20 @@ import cors from 'cors';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
 
-import { errorHandler, notFoundHandler } from './api/middleware/errorHandler.js';
+import {
+  errorHandler,
+  notFoundHandler,
+} from './api/middleware/errorHandler.js';
 import resultsRouter from './api/routes/results.js';
 import scanRouter from './api/routes/scan.js';
 import statusRouter from './api/routes/status.js';
 import { config } from './config/index.js';
 import { closePool, isDatabaseHealthy } from './db/client.js';
 import { closeQueue, isQueueHealthy } from './services/queue.service.js';
-import { isScannerHealthy, getScannerVersion } from './services/scanner.service.js';
+import {
+  isScannerHealthy,
+  getScannerVersion,
+} from './services/scanner.service.js';
 import { initStorage } from './services/storage.service.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import logger from './utils/logger.js';

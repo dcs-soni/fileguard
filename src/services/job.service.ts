@@ -78,7 +78,9 @@ export async function createJob(input: CreateJobInput): Promise<Job> {
 }
 
 export async function getJobById(jobId: string): Promise<Job | null> {
-  const row = await queryOne<JobRow>('SELECT * FROM jobs WHERE id = $1', [jobId]);
+  const row = await queryOne<JobRow>('SELECT * FROM jobs WHERE id = $1', [
+    jobId,
+  ]);
 
   return row ? mapRowToJob(row) : null;
 }
@@ -194,14 +196,20 @@ export async function saveScanResult(
 
   const scanResult = mapRowToScanResult(result.rows[0]!);
   logger.info(
-    { jobId, isInfected: resultData.isInfected, threatName: resultData.threatName },
+    {
+      jobId,
+      isInfected: resultData.isInfected,
+      threatName: resultData.threatName,
+    },
     'Scan result saved'
   );
 
   return scanResult;
 }
 
-export async function getScanResultByJobId(jobId: string): Promise<ScanResult | null> {
+export async function getScanResultByJobId(
+  jobId: string
+): Promise<ScanResult | null> {
   const row = await queryOne<ScanResultRow>(
     'SELECT * FROM scan_results WHERE job_id = $1',
     [jobId]
@@ -267,7 +275,6 @@ export async function getInfectedFiles(
   };
 }
 
-
 export async function completeJobWithResult(
   jobId: string,
   scanResult: {
@@ -299,7 +306,10 @@ export async function completeJobWithResult(
     );
   });
 
-  logger.info({ jobId, isInfected: scanResult.isInfected }, 'Job completed with result');
+  logger.info(
+    { jobId, isInfected: scanResult.isInfected },
+    'Job completed with result'
+  );
 }
 
 export default {

@@ -17,7 +17,10 @@ async function processScanJob(job: Job<ScanJobPayload>): Promise<void> {
   const { jobId, filePath } = job.data;
   const startTime = Date.now();
 
-  workerLogger.info({ jobId, filePath, attempt: job.attemptsMade + 1 }, 'Processing scan job');
+  workerLogger.info(
+    { jobId, filePath, attempt: job.attemptsMade + 1 },
+    'Processing scan job'
+  );
 
   try {
     await jobService.updateJobStatus(jobId, JobStatus.PROCESSING);
@@ -65,7 +68,8 @@ async function processScanJob(job: Job<ScanJobPayload>): Promise<void> {
     );
   } catch (error) {
     const totalDuration = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     workerLogger.error(
       {
@@ -106,11 +110,17 @@ worker.on('ready', () => {
 });
 
 worker.on('active', (job) => {
-  workerLogger.debug({ jobId: job.data.jobId, queueJobId: job.id }, 'Job became active');
+  workerLogger.debug(
+    { jobId: job.data.jobId, queueJobId: job.id },
+    'Job became active'
+  );
 });
 
 worker.on('completed', (job) => {
-  workerLogger.debug({ jobId: job.data.jobId, queueJobId: job.id }, 'Job completed');
+  workerLogger.debug(
+    { jobId: job.data.jobId, queueJobId: job.id },
+    'Job completed'
+  );
 });
 
 worker.on('failed', (job, error) => {
