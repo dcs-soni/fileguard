@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
 
 import jobService from '../../services/job.service.js';
-import type { InfectedFilesResponse, ApiErrorResponse } from '../../types/index.js';
+import type {
+  InfectedFilesResponse,
+  ApiErrorResponse,
+} from '../../types/index.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
@@ -15,11 +18,19 @@ router.get(
   '/',
   asyncHandler(
     async (
-      req: Request<object, InfectedFilesResponse | ApiErrorResponse, object, ResultsQuery>,
+      req: Request<
+        object,
+        InfectedFilesResponse | ApiErrorResponse,
+        object,
+        ResultsQuery
+      >,
       res: Response<InfectedFilesResponse | ApiErrorResponse>
     ): Promise<void> => {
       const page = Math.max(parseInt(req.query.page ?? '1', 10) || 1, 1);
-      const limit = Math.min(Math.max(parseInt(req.query.limit ?? '20', 10) || 20, 1), 100);
+      const limit = Math.min(
+        Math.max(parseInt(req.query.limit ?? '20', 10) || 20, 1),
+        100
+      );
 
       const { files, total } = await jobService.getInfectedFiles(page, limit);
 
@@ -92,7 +103,9 @@ router.get(
         completedJobs: parseInt(stats.completed_jobs, 10),
         failedJobs: parseInt(stats.failed_jobs, 10),
         infectedFiles: parseInt(stats.infected_files, 10),
-        avgScanDurationMs: Math.round(parseFloat(stats.avg_scan_duration_ms) || 0),
+        avgScanDurationMs: Math.round(
+          parseFloat(stats.avg_scan_duration_ms) || 0
+        ),
       },
     });
   })

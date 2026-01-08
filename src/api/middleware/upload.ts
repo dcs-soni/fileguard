@@ -1,4 +1,3 @@
-
 // Configures multer for handling multipart/form-data file uploads. Provides proper validation, size limits, and error handling.
 
 import os from 'os';
@@ -11,7 +10,6 @@ import { config } from '../../config/index.js';
 import { FileTooLargeError, ValidationError } from '../../utils/errors.js';
 
 const MAX_FILE_SIZE = config.storage.maxFileSizeMb * 1024 * 1024;
-
 
 const ALLOWED_MIME_TYPES = new Set([
   // Documents
@@ -52,7 +50,6 @@ const ALLOWED_MIME_TYPES = new Set([
   // Others
   'application/octet-stream', // Generic binary
 ]);
-
 
 const BLOCKED_EXTENSIONS = new Set([
   // Not really files
@@ -100,12 +97,11 @@ export const upload = multer({
   fileFilter,
   limits: {
     fileSize: MAX_FILE_SIZE,
-    files: 1, 
-    fields: 10, 
-    fieldSize: 1024 * 1024, 
+    files: 1,
+    fields: 10,
+    fieldSize: 1024 * 1024,
   },
 });
-
 
 export const uploadSingle = upload.single('file');
 
@@ -121,7 +117,9 @@ export function handleUploadError(
       return;
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      next(new ValidationError('Unexpected file field. Use "file" as field name.'));
+      next(
+        new ValidationError('Unexpected file field. Use "file" as field name.')
+      );
       return;
     }
     next(new ValidationError(`Upload error: ${err.message}`));

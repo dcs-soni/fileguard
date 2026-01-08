@@ -10,7 +10,6 @@ import logger from '../utils/logger.js';
 
 const UPLOAD_DIR = path.resolve(config.storage.uploadDir);
 
-
 export interface StoredFile {
   storedFilename: string;
   filePath: string;
@@ -23,7 +22,10 @@ export async function initStorage(): Promise<void> {
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
     logger.info({ uploadDir: UPLOAD_DIR }, 'Storage initialized');
   } catch (error) {
-    logger.error({ error, uploadDir: UPLOAD_DIR }, 'Failed to initialize storage');
+    logger.error(
+      { error, uploadDir: UPLOAD_DIR },
+      'Failed to initialize storage'
+    );
     throw new StorageError('Failed to initialize storage directory');
   }
 }
@@ -111,7 +113,6 @@ export async function fileExists(storedFilename: string): Promise<boolean> {
   }
 }
 
-
 export async function deleteFile(storedFilename: string): Promise<void> {
   try {
     const filePath = getFilePath(storedFilename);
@@ -122,7 +123,6 @@ export async function deleteFile(storedFilename: string): Promise<void> {
     throw new StorageError('Failed to delete file');
   }
 }
-
 
 export async function getFileStats(storedFilename: string): Promise<{
   size: number;

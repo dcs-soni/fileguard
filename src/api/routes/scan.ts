@@ -3,7 +3,10 @@ import { Router, Request, Response } from 'express';
 import jobService from '../../services/job.service.js';
 import queueService from '../../services/queue.service.js';
 import storageService from '../../services/storage.service.js';
-import type { ScanUploadResponse, ApiErrorResponse } from '../../types/index.js';
+import type {
+  ScanUploadResponse,
+  ApiErrorResponse,
+} from '../../types/index.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 import { ValidationError } from '../../utils/errors.js';
 import logger from '../../utils/logger.js';
@@ -21,18 +24,28 @@ router.post(
   handleUploadError,
   asyncHandler(
     async (
-      req: Request<object, ScanUploadResponse | ApiErrorResponse, ScanRequestBody>,
+      req: Request<
+        object,
+        ScanUploadResponse | ApiErrorResponse,
+        ScanRequestBody
+      >,
       res: Response<ScanUploadResponse | ApiErrorResponse>
     ): Promise<void> => {
       if (!req.file) {
-        throw new ValidationError('No file provided. Use "file" as the field name.');
+        throw new ValidationError(
+          'No file provided. Use "file" as the field name.'
+        );
       }
 
       const { file } = req;
 
       // Validate filename is not empty or only whitespace
       const trimmedFilename = file.originalname.trim();
-      if (!trimmedFilename || trimmedFilename === '.' || trimmedFilename === '..') {
+      if (
+        !trimmedFilename ||
+        trimmedFilename === '.' ||
+        trimmedFilename === '..'
+      ) {
         throw new ValidationError('Invalid filename provided.');
       }
 
@@ -49,7 +62,10 @@ router.post(
         'Processing file upload'
       );
 
-      const storedFile = await storageService.saveFile(file.path, file.originalname);
+      const storedFile = await storageService.saveFile(
+        file.path,
+        file.originalname
+      );
 
       // Wrap job creation and queue enqueue in try-catch to cleanup file on failure
       let job;
@@ -90,7 +106,8 @@ router.post(
           filename: job.originalFilename,
           fileSize: job.fileSize,
           status: job.status,
-          message: 'File queued for scanning. Use GET /status/:jobId to check progress.',
+          message:
+            'File queued for scanning. Use GET /status/:jobId to check progress.',
         },
       });
     }

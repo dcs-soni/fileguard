@@ -34,10 +34,15 @@ export class ValidationError extends AppError {
 
 export class NotFoundError extends AppError {
   constructor(resource: string, identifier: string) {
-    super(`${resource} not found: ${identifier}`, 404, ErrorCode.JOB_NOT_FOUND, {
-      resource,
-      identifier,
-    });
+    super(
+      `${resource} not found: ${identifier}`,
+      404,
+      ErrorCode.JOB_NOT_FOUND,
+      {
+        resource,
+        identifier,
+      }
+    );
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
@@ -45,9 +50,14 @@ export class NotFoundError extends AppError {
 // 413 Payload Too Large
 export class FileTooLargeError extends AppError {
   constructor(maxSizeMb: number) {
-    super(`File exceeds maximum allowed size of ${maxSizeMb}MB`, 413, ErrorCode.FILE_TOO_LARGE, {
-      maxSizeMb,
-    });
+    super(
+      `File exceeds maximum allowed size of ${maxSizeMb}MB`,
+      413,
+      ErrorCode.FILE_TOO_LARGE,
+      {
+        maxSizeMb,
+      }
+    );
     Object.setPrototypeOf(this, FileTooLargeError.prototype);
   }
 }

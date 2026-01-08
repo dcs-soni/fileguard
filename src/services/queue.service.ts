@@ -6,20 +6,18 @@ import type { ScanJobPayload } from '../types/index.js';
 import { QueueError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
-
 export const SCAN_QUEUE_NAME = 'file-scan';
 
-
-
 // Shared between queue and worker
- 
-export const redisConnection: RedisType = new (Redis as unknown as typeof Redis.default)({
-  host: config.redis.host,
-  port: config.redis.port,
-  password: config.redis.password ?? undefined,
-  maxRetriesPerRequest: null, // Required for BullMQ
-  enableReadyCheck: false,
-});
+
+export const redisConnection: RedisType =
+  new (Redis as unknown as typeof Redis.default)({
+    host: config.redis.host,
+    port: config.redis.port,
+    password: config.redis.password ?? undefined,
+    maxRetriesPerRequest: null, // Required for BullMQ
+    enableReadyCheck: false,
+  });
 
 redisConnection.on('connect', () => {
   logger.info('Redis connection established');
@@ -29,9 +27,7 @@ redisConnection.on('error', (err: Error) => {
   logger.error({ err }, 'Redis connection error');
 });
 
-
-
-// Queue for file scanning job. Jobs are processed by workers in scan.worker.ts 
+// Queue for file scanning job. Jobs are processed by workers in scan.worker.ts
 export const scanQueue = new Queue<ScanJobPayload>(SCAN_QUEUE_NAME, {
   connection: redisConnection,
   defaultJobOptions: {
@@ -42,16 +38,15 @@ export const scanQueue = new Queue<ScanJobPayload>(SCAN_QUEUE_NAME, {
     },
 
     removeOnComplete: {
-      age: 24 * 60 * 60, 
+      age: 24 * 60 * 60,
       count: 1000, // keep at most
     },
-  
+
     removeOnFail: {
-      age: 7 * 24 * 60 * 60, 
+      age: 7 * 24 * 60 * 60,
       count: 500,
     },
   },
-
 });
 
 /**
@@ -157,7 +152,6 @@ export async function cleanQueue(
   logger.info({ status, removed: removed.length }, 'Queue cleaned');
   return removed.length;
 }
-
 
 export async function isQueueHealthy(): Promise<boolean> {
   try {

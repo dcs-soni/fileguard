@@ -32,12 +32,15 @@ export async function query<T extends Record<string, unknown>>(
     const result = await pool.query<T>(text, params);
     const duration = Date.now() - start;
 
-    logger.debug({
-      query: text.substring(0, 100),
-      params: params?.length,
-      rows: result.rowCount,
-      duration,
-    }, 'Query executed');
+    logger.debug(
+      {
+        query: text.substring(0, 100),
+        params: params?.length,
+        rows: result.rowCount,
+        duration,
+      },
+      'Query executed'
+    );
 
     return result;
   } catch (error) {
@@ -77,7 +80,6 @@ export async function withTransaction<T>(
     client.release();
   }
 }
-
 
 export async function isDatabaseHealthy(): Promise<boolean> {
   try {

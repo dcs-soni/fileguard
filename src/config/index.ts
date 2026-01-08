@@ -6,15 +6,16 @@ import type { AppConfig } from '../types/index.js';
 dotenv.config();
 
 const envSchema = z.object({
-
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
   PORT: z.string().transform(Number).default('3000'),
   LOG_LEVEL: z.string().default('info'),
 
   DATABASE_URL: z.string().optional(),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.string().transform(Number).default('5432'),
-  DB_NAME: z.string().default('virus_scanner'),
+  DB_NAME: z.string().default('fileguard'),
   DB_USER: z.string().default('postgres'),
   DB_PASSWORD: z.string().default('postgres'),
   DB_SSL: z
@@ -53,7 +54,6 @@ function parseEnv(): z.infer<typeof envSchema> {
 }
 
 const env = parseEnv();
-
 
 export const config: AppConfig = {
   env: env.NODE_ENV,
