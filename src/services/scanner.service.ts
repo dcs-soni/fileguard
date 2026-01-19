@@ -6,16 +6,9 @@ import { ScannerError, ScannerUnavailableError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
 let clamScanner: NodeClam | null = null;
-let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
-// Must be called before scanning files
-
-export async function initScanner(): Promise<void> {
-  if (isInitialized) {
-    logger.debug('Scanner already initialized');
-    return;
-  }
-
+async function doInitScanner(): Promise<void> {
   try {
     logger.info(
       { host: config.clamav.host, port: config.clamav.port },
@@ -23,14 +16,13 @@ export async function initScanner(): Promise<void> {
     );
 
     clamScanner = await new NodeClam().init({
-      removeInfected: false, // Don't auto-delete (manually handle)
+      removeInfected: false,
       quarantineInfected: false,
       scanRecursively: true,
       debugMode: config.env === 'development',
 
-      // ClamAV daemon settings
       clamdscan: {
-        socket: false, // Use TCP
+        socket: false,
         host: config.clamav.host,
         port: config.clamav.port,
         timeout: config.clamav.timeout,
@@ -38,24 +30,38 @@ export async function initScanner(): Promise<void> {
         active: true,
       },
 
-      // Disable local clamscan binary
       clamscan: {
         active: false,
       },
 
-      preference: 'clamdscan', // Use daemon mode
+      preference: 'clamdscan',
     });
 
-    isInitialized = true;
     logger.info('ClamAV scanner initialized successfully');
   } catch (error) {
+    initPromise = null;
     logger.error({ error }, 'Failed to initialize ClamAV scanner');
     throw new ScannerUnavailableError();
   }
 }
 
+export async function initScanner(): Promise<void> {
+  if (clamScanner) {
+    logger.debug('Scanner already initialized');
+    return;
+  }
+
+  if (initPromise) {
+    logger.debug('Scanner initialization in progress, waiting...');
+    return initPromise;
+  }
+
+  initPromise = doInitScanner();
+  return initPromise;
+}
+
 export async function scanFile(filePath: string): Promise<ClamScanResult> {
-  if (!clamScanner || !isInitialized) {
+  if (!clamScanner) {
     await initScanner();
   }
 
@@ -92,7 +98,8 @@ export async function scanFile(filePath: string): Promise<ClamScanResult> {
     logger.error({ error, filePath, scanDurationMs }, 'File scan failed');
 
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
-      isInitialized = false;
+      clamScanner = null;
+      initPromise = null;
       throw new ScannerUnavailableError();
     }
 
@@ -106,7 +113,7 @@ export async function scanFile(filePath: string): Promise<ClamScanResult> {
 export async function scanDirectory(
   directoryPath: string
 ): Promise<ClamScanResult> {
-  if (!clamScanner || !isInitialized) {
+  if (!clamScanner) {
     await initScanner();
   }
 
@@ -163,7 +170,7 @@ export async function scanDirectory(
 }
 
 export async function scanBuffer(buffer: Buffer): Promise<ClamScanResult> {
-  if (!clamScanner || !isInitialized) {
+  if (!clamScanner) {
     await initScanner();
   }
 
@@ -202,7 +209,8 @@ export async function scanBuffer(buffer: Buffer): Promise<ClamScanResult> {
     );
 
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
-      isInitialized = false;
+      clamScanner = null;
+      initPromise = null;
       throw new ScannerUnavailableError();
     }
 
@@ -225,7 +233,8 @@ export async function isScannerHealthy(): Promise<boolean> {
     return true;
   } catch (error) {
     logger.warn({ error }, 'ClamAV health check failed');
-    isInitialized = false;
+    clamScanner = null;
+    initPromise = null;
     return false;
   }
 }
@@ -244,8 +253,8 @@ export async function getScannerVersion(): Promise<string | null> {
 }
 
 export async function resetScanner(): Promise<void> {
-  isInitialized = false;
   clamScanner = null;
+  initPromise = null;
   await initScanner();
 }
 
