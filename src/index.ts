@@ -22,6 +22,14 @@ import logger from './utils/logger.js';
 
 const app = express();
 
+// Trust first proxy hop for proper IP extraction behind reverse proxies
+// Use 'loopback' in development, number of hops in production
+if (config.env === 'production') {
+  app.set('trust proxy', 1);
+} else {
+  app.set('trust proxy', 'loopback');
+}
+
 app.use(helmet());
 
 app.use(

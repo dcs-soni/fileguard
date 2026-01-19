@@ -29,11 +29,12 @@ export const uploadRateLimiter = rateLimit({
   legacyHeaders: false,
 
   keyGenerator: (req: Request): string => {
-    return (
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
-      req.ip ??
-      'unknown'
-    );
+    // Express populates req.ip correctly when trust proxy is configured
+    if (!req.ip) {
+      logger.warn({ path: req.path }, 'Request without identifiable IP');
+      return 'unidentified-' + Date.now();
+    }
+    return req.ip;
   },
 
   handler: (req: Request, res: Response) => {
@@ -66,11 +67,10 @@ export const apiRateLimiter = rateLimit({
   legacyHeaders: false,
 
   keyGenerator: (req: Request): string => {
-    return (
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
-      req.ip ??
-      'unknown'
-    );
+    if (!req.ip) {
+      return 'unidentified-' + Date.now();
+    }
+    return req.ip;
   },
 
   handler: (_req: Request, res: Response) => {
