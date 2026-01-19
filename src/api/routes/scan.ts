@@ -10,6 +10,7 @@ import type {
 import { asyncHandler } from '../../utils/asyncHandler.js';
 import { ValidationError } from '../../utils/errors.js';
 import logger from '../../utils/logger.js';
+import { uploadRateLimiter } from '../middleware/rateLimit.js';
 import { uploadSingle, handleUploadError } from '../middleware/upload.js';
 
 const router = Router();
@@ -20,6 +21,7 @@ interface ScanRequestBody {
 
 router.post(
   '/',
+  uploadRateLimiter,
   uploadSingle,
   handleUploadError,
   asyncHandler(
